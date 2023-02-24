@@ -25,7 +25,8 @@ public class NoteService {
 
     public Note addNote(Note note) {
         var title = note.getTitle();
-        if (noteRepository.existsByTitle(title)) {
+        var personId = note.getPerson().getId();
+        if (noteRepository.existsByTitleAndPerson_Id(title, personId)) {
             throw new EntityAlreadyExistsException(String.format("Запись с наименованием '%s' уже существует", title));
         }
 
@@ -43,5 +44,9 @@ public class NoteService {
         Note note = getNoteById(id);
 
         noteRepository.delete(note);
+    }
+
+    public List<Note> getAllNotesByPersonId(Long personId) {
+        return noteRepository.findByPerson_Id(personId);
     }
 }

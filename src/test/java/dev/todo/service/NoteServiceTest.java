@@ -1,6 +1,7 @@
 package dev.todo.service;
 
 import dev.todo.entity.Note;
+import dev.todo.entity.Person;
 import dev.todo.exception.EntityAlreadyExistsException;
 import dev.todo.exception.EntityNotFoundException;
 import dev.todo.repository.NoteRepository;
@@ -27,23 +28,26 @@ public class NoteServiceTest {
 
     @Test
     public void noteRepository_getAllNotes() {
-        Mockito.when(noteRepository.findAll())
+        Person person = new Person(1L, "test", "test123");
+
+        Mockito.when(noteRepository.findByPerson_Id(Mockito.any(Long.class)))
                 .thenReturn(
                         Arrays.asList(
-                                new Note(1L, "Список задач 1", LocalDateTime.now(), Collections.emptyList()),
-                                new Note(2L, "Список задач 2", LocalDateTime.now(), Collections.emptyList())
+                                new Note(1L, "Список задач 1", LocalDateTime.now(), person, Collections.emptyList()),
+                                new Note(2L, "Список задач 2", LocalDateTime.now(), person, Collections.emptyList())
                         )
                 );
 
-        List<Note> notes = noteService.getAllNotes();
+        List<Note> notes = noteService.getAllNotesByPersonId(person.getId());
         Assertions.assertEquals(2, notes.size());
 
-        Mockito.verify(noteRepository, Mockito.times(1)).findAll();
+        Mockito.verify(noteRepository, Mockito.times(1)).findByPerson_Id(person.getId());
     }
 
     @Test
     public void noteRepository_getNoteById() {
-        Note note1 = new Note(1L, "Список задач 1", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note note1 = new Note(1L, "Список задач 1", LocalDateTime.now(), person, Collections.emptyList());
 
         Mockito.when(noteRepository.findById(1L))
                 .thenReturn(Optional.ofNullable(note1));
@@ -66,8 +70,9 @@ public class NoteServiceTest {
 
     @Test
     public void noteRepository_addNote() {
-        Note temp = new Note("Список задач 1");
-        Note note1 = new Note(1L, "Список задач 1", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note temp = new Note("Список задач 1", person);
+        Note note1 = new Note(1L, "Список задач 1", LocalDateTime.now(), person, Collections.emptyList());
 
         Mockito.when(noteRepository.save(Mockito.any(Note.class)))
                 .thenReturn(note1);
@@ -79,7 +84,7 @@ public class NoteServiceTest {
         Assertions.assertEquals(1L, noteFromService.getId());
         Assertions.assertEquals("Список задач 1", noteFromService.getTitle());
 
-        Mockito.when(noteRepository.existsByTitle(temp.getTitle()))
+        Mockito.when(noteRepository.existsByTitleAndPerson_Id(temp.getTitle(), person.getId()))
                 .thenThrow(new EntityAlreadyExistsException("Запись с наименованием 'Список задач 1' уже существует"));
 
         EntityAlreadyExistsException exception = Assertions.assertThrows(
@@ -94,8 +99,9 @@ public class NoteServiceTest {
 
     @Test
     public void noteRepository_updateNoteTitle() {
-        Note temp = new Note(1L, "Список задач 1", LocalDateTime.now(), Collections.emptyList());
-        Note note1 = new Note(1L, "Тест", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note temp = new Note(1L, "Список задач 1", LocalDateTime.now(), person, Collections.emptyList());
+        Note note1 = new Note(1L, "Тест", LocalDateTime.now(), person, Collections.emptyList());
 
         Mockito.when(noteRepository.findById(1L)).thenReturn(Optional.ofNullable(temp));
         Mockito.when(noteRepository.save(Mockito.any(Note.class)))
@@ -131,7 +137,8 @@ public class NoteServiceTest {
 
     @Test
     public void noteRepository_deleteNoteById() {
-        Note note = new Note(1L, "Список задач", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note note = new Note(1L, "Список задач", LocalDateTime.now(), person, Collections.emptyList());
         Mockito.when(noteRepository.findById(1L)).thenReturn(Optional.ofNullable(note));
         Mockito.doNothing().when(noteRepository).delete(note);
         noteService.deleteNoteById(note.getId());
