@@ -1,8 +1,10 @@
 package dev.todo.util;
 
 import dev.todo.dto.NoteDTO;
+import dev.todo.dto.PersonDTO;
 import dev.todo.dto.TaskDTO;
 import dev.todo.entity.Note;
+import dev.todo.entity.Person;
 import dev.todo.entity.Task;
 
 import java.time.LocalDateTime;
@@ -72,5 +74,20 @@ public class DataTransformation {
         return tasks.stream()
                 .map(task -> convertingTaskDataFromEntityToDTO(task))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Перевод данных объекта типа Task из DTO в сущность
+     * @param personDTO - объект DTO типа Person
+     * @return объект типа Person
+     */
+    public static Person convertingPersonDataFromDtoToEntity(PersonDTO personDTO) {
+        Long id = personDTO.getId();
+        String username = personDTO.getUsername();
+        String password = personDTO.getPassword();
+
+        Person person = new Person(id, username, password);
+
+        return person;
     }
 }

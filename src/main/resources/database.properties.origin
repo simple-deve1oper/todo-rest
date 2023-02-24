@@ -3,5 +3,5 @@ spring.datasource.url=
 spring.datasource.username=
 spring.datasource.password=
 
-spring.jpa.properties.dialect=
-spring.jpa.properties.show-sql=
+spring.jpa.dialect=
+spring.jpa.show-sql=

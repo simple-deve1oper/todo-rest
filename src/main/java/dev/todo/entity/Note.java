@@ -31,11 +31,17 @@ public class Note {
     @CreationTimestamp
     @Column(name = "date_time")
     private LocalDateTime dateTime; // дата и время
+
+    @ManyToOne
+    @JoinColumn(name = "person_id", referencedColumnName = "id")
+    private Person person;
+
     @OneToMany(mappedBy = "note")
     @Cascade(org.hibernate.annotations.CascadeType.REMOVE)
     private List<Task> tasks;   // список задач
 
-    public Note(String title) {
+    public Note(String title, Person person) {
         this.title = title;
+        this.person = person;
     }
 }

@@ -1,6 +1,7 @@
 package dev.todo.service;
 
 import dev.todo.entity.Note;
+import dev.todo.entity.Person;
 import dev.todo.entity.Task;
 import dev.todo.exception.EntityNotFoundException;
 import dev.todo.repository.TaskRepository;
@@ -25,7 +26,8 @@ public class TaskServiceTest {
 
     @Test
     public void taskService_getTaskById() {
-        Note note = new Note(1L, "Список задач", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note note = new Note(1L, "Список задач", LocalDateTime.now(), person, Collections.emptyList());
         Task task = new Task(1L, "Молоко", false, note);
 
         Mockito.when(taskRepository.findById(1L))
@@ -52,7 +54,8 @@ public class TaskServiceTest {
 
     @Test
     public void taskService_addTask() {
-        Note note = new Note(36L, "Список задач", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note note = new Note(36L, "Список задач", LocalDateTime.now(), person, Collections.emptyList());
         Task temp = new Task("Молоко", note);
         Task task = new Task(55L, "Молоко", false, note);
         Mockito.when(taskRepository.save(Mockito.any(Task.class))).thenReturn(task);
@@ -74,7 +77,8 @@ public class TaskServiceTest {
 
     @Test
     public void taskService_deleteTaskById() {
-        Note note = new Note(1L, "Список задач", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note note = new Note(1L, "Список задач", LocalDateTime.now(), person, Collections.emptyList());
         Task task = new Task(1L, "Молоко", false, note);
         Mockito.when(taskRepository.findById(1L)).thenReturn(Optional.ofNullable(task));
         Mockito.doNothing().when(taskRepository).delete(task);
@@ -96,7 +100,8 @@ public class TaskServiceTest {
 
     @Test
     public void taskService_changeStatus() {
-        Note note = new Note(1L, "Список задач", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note note = new Note(1L, "Список задач", LocalDateTime.now(), person, Collections.emptyList());
         Task task = new Task(1L, "Молоко", false, note);
         Task task2 = new Task(1L, "Молоко", true, note);
 

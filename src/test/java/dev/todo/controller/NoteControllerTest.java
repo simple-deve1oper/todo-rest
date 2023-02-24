@@ -3,18 +3,29 @@ package dev.todo.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.todo.dto.NoteDTO;
 import dev.todo.entity.Note;
+import dev.todo.entity.Person;
 import dev.todo.exception.EntityAlreadyExistsException;
 import dev.todo.exception.EntityNotFoundException;
-import dev.todo.exception.EntityValidationException;
+import dev.todo.security.PersonDetails;
+import dev.todo.security.PersonDetailsService;
 import dev.todo.service.NoteService;
+import dev.todo.service.PersonService;
+import dev.todo.service.TaskService;
 import dev.todo.util.DataTransformation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -34,23 +46,36 @@ public class NoteControllerTest {
     private MockMvc mockMvc;
     @MockBean
     private NoteService noteService;
+    @MockBean
+    private TaskService taskService;
+    @MockBean
+    private PersonService personService;
+    @MockBean
+    private PersonDetailsService personDetailsService;
+    @MockBean
+    private PersonDetails personDetails;
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
-    public void noteController_getAllNotes() throws Exception {
+    @WithMockUser(username = "test", password = "test123")
+    public void noteController_getAllNotesByPersonId() throws Exception {
+        Person person = new Person(1L, "test", "test123");
+
+        Mockito.when(personService.getPersonByUsername(Mockito.any(String.class))).thenReturn(person);
+
         List<Note> notes = Arrays.asList(
-                new Note(1L, "Список задач 1", LocalDateTime.now(), Collections.emptyList()),
-                new Note(2L, "Список задач 2", LocalDateTime.now(), Collections.emptyList())
+                new Note(1L, "Список задач 1", LocalDateTime.now(), person, Collections.emptyList()),
+                new Note(2L, "Список задач 2", LocalDateTime.now(), person, Collections.emptyList())
         );
-        Mockito.when(noteService.getAllNotes())
+        Mockito.when(noteService.getAllNotesByPersonId(Mockito.any(Long.class)))
                 .thenReturn(notes);
 
         List<NoteDTO> notesDTO = DataTransformation.convertingListNotesFromEntityToDTO(notes);
         String responseJson = objectMapper.writeValueAsString(notesDTO);
 
         mockMvc.perform(get("/api/v1/notes/all")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON).with(user("test")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(responseJson))
@@ -60,8 +85,11 @@ public class NoteControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test123")
     public void noteController_getNoteById() throws Exception {
-        Note note = new Note(1L, "Список задач 1", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person("test", "test123");
+
+        Note note = new Note(1L, "Список задач 1", LocalDateTime.now(), person, Collections.emptyList());
         Mockito.when(noteService.getNoteById(1L))
                 .thenReturn(note);
 
@@ -69,7 +97,7 @@ public class NoteControllerTest {
         String responseJson = objectMapper.writeValueAsString(noteDTO);
 
         mockMvc.perform(get("/api/v1/notes/1")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON).with(user("test")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(responseJson))
@@ -88,9 +116,11 @@ public class NoteControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test123")
     public void noteController_addNote() throws Exception {
-        Note temp = new Note("Список задач 1");
-        Note note = new Note(1L, "Список задач 1", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note temp = new Note("Список задач 1", person);
+        Note note = new Note(1L, "Список задач 1", LocalDateTime.now(), person, Collections.emptyList());
         Mockito.when(noteService.addNote(Mockito.any(Note.class)))
                 .thenReturn(note);
 
@@ -120,8 +150,10 @@ public class NoteControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test123")
     public void noteController_updateNoteTitle() throws Exception {
-        Note note = new Note(1L, "Тест", LocalDateTime.now(), Collections.emptyList());
+        Person person = new Person(1L, "test", "test123");
+        Note note = new Note(1L, "Тест", LocalDateTime.now(), person, Collections.emptyList());
         Mockito.when(noteService.updateNoteTitle(1L, "Тест"))
                 .thenReturn(note);
 
@@ -150,6 +182,7 @@ public class NoteControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "test", password = "test123")
     public void noteController_deleteNoteById() throws Exception {
         Mockito.doNothing().when(noteService).deleteNoteById(1L);
 
